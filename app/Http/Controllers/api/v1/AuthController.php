@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Resources\api\v1\AuthResource;
+use App\Http\Resources\api\v1\UserResource;
 use App\Services\api\v1\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -57,5 +58,16 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Sesión cerrada en todos los dispositivos de forma segura.',
         ], 200);
+    }
+
+    // Obtener el usuario autenticado
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'success' => true,
+            'data' => new UserResource($user)
+        ]);
     }
 }

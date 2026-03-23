@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\api\v1\AuthController;
+use App\Http\Controllers\api\v1\BookingController;
 use App\Http\Controllers\api\v1\VehicleController;
 use App\Http\Controllers\api\v1\TripController;
+use App\Http\Controllers\api\v1\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -15,6 +17,10 @@ Route::prefix('v1')->group(function () {
         
         // Ruta para obtener los datos del usuario autenticado
         Route::get('/me', [AuthController::class, 'me']);
+
+        // Rutas para la gestión de usuarios (solo para administradores)
+        Route::get('/users', [UserController::class, 'index']);
+
         // Gestión de sesión
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
@@ -29,5 +35,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/trips', [TripController::class, 'store']);
         Route::put('/trips/{id}', [TripController::class, 'update']);
         Route::patch('/trips/{id}/cancel', [TripController::class, 'cancel']);
+
+        // Rutas para la gestión de reservas
+        Route::post('/bookings', [BookingController::class, 'store']);
+        
     });
 });

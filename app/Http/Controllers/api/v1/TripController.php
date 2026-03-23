@@ -88,7 +88,7 @@ class TripController extends Controller
         return new TripResource($trip);
     }
 
-    // PUT|PATCH /api/v1/trips/{id}
+    // PATCH /api/v1/trips/{id}
     public function update(UpdateTripRequest $request, $id)
     {
         $trip = Trip::findOrFail($id);
@@ -96,12 +96,26 @@ class TripController extends Controller
 
         // Validamos que el viaje pertenece al conductor autenticado
         if ($trip->driver_id !== $user->id) {
-            return response()->json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'No puedes editar un viaje que no es tuyo.', 'data' => []]], 403);
+            return response()->json([
+                'success' => false, 
+                'error' => [
+                    'code' => 'FORBIDDEN', 
+                    'message' => 'No puedes editar un viaje que no es tuyo.', 
+                    'data' => []
+                ]
+            ], 403);
         }
 
         // Solo editamos viajes que no tengan reservas confirmadas
         if ($trip->seats_available < $trip->seats_total) {
-            return response()->json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'No puedes editar este viaje porque ya hay pasajeros con reservas confirmadas.', 'data' => []]], 403);
+            return response()->json([
+                'success' => false, 
+                'error' => [
+                    'code' => 'FORBIDDEN', 
+                    'message' => 'No puedes editar este viaje porque ya hay pasajeros con reservas confirmadas.', 
+                    'data' => []
+                ]
+            ], 403);
         }
 
         $trip->update($request->validated());
@@ -116,12 +130,26 @@ class TripController extends Controller
 
         // Validar que el viaje pertenece al conductor autenticado
         if ($trip->driver_id !== $user->id) {
-            return response()->json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'No puedes cancelar un viaje que no es tuyo.', 'data' => []]], 403);
+            return response()->json([
+                'success' => false, 
+                'error' => [
+                    'code' => 'FORBIDDEN', 
+                    'message' => 'No puedes cancelar un viaje que no es tuyo.', 
+                    'data' => []
+                ]
+            ], 403);
         }
 
         // Validamos el estado del viaje. Solo se pueden cancelar viajes activos.
         if ($trip->status === 'cancelled') {
-            return response()->json(['success' => false, 'error' => ['code' => 'BAD_REQUEST', 'message' => 'El viaje ya estaba cancelado.', 'data' => []]], 400);
+            return response()->json([
+                'success' => false, 
+                'error' => [
+                    'code' => 'BAD_REQUEST', 
+                    'message' => 'El viaje ya estaba cancelado.', 
+                    'data' => []
+                ]
+            ], 400);
         }
 
         // Limite de 3 horas para cancelar el viaje. Si quedan menos de 3 horas para la salida, no se puede cancelar.

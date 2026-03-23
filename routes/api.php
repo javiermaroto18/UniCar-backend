@@ -37,7 +37,9 @@ Route::prefix('v1')->group(function () {
         Route::patch('/trips/{id}/cancel', [TripController::class, 'cancel']);
 
         // Rutas para la gestión de reservas
+        Route::get('/bookings/me', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store']);
+        Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
         
     });
 });

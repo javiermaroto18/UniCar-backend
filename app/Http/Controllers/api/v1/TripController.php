@@ -88,7 +88,7 @@ class TripController extends Controller
         return new TripResource($trip);
     }
 
-    // PATCH /api/v1/trips/{id}
+    // PUT /api/v1/trips/{id}
     public function update(UpdateTripRequest $request, $id)
     {
         $trip = Trip::findOrFail($id);

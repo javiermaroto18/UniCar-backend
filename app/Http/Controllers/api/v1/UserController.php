@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Http\Resources\api\v1\UserResource;
 use Illuminate\Http\Request;
+use App\Exceptions\ForbiddenException;
 
 class UserController extends Controller
 {
@@ -23,6 +24,10 @@ class UserController extends Controller
                 ]
             ], 403);
         }*/
+
+        // if (!$request->user()->is_admin) {
+        //     throw new ForbiddenException('Acceso denegado. Se requieren permisos de administrador.', 'ADMIN_REQUIRED');
+        // }
 
         $users = User::paginate(15);        
         return UserResource::collection($users);

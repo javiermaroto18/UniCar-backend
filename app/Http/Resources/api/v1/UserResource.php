@@ -18,9 +18,10 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'roles' => $this->getRoleNames(),
             
             // Campos para el Front
-            'avatar' => $this->avatar,
+            'avatar' => $this->avatar, 
             'notification_email' => $this->notification_email,
             'is_verified_driver' => $this->is_verified_driver,
             

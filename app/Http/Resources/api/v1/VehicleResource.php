@@ -16,9 +16,7 @@ class VehicleResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'brand' => $this->brand,
-            'model' => $this->model,
-            'color' => $this->color,
+            'brand_model' => $this->brand_model,
             'license_plate' => $this->license_plate,
             'created_at' => $this->created_at->toDateString(),
         ];

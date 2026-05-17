@@ -27,6 +27,7 @@ class StoreVehicleRequest extends FormRequest
             'color' => ['required', 'string', 'max:30'],
             // La matrícula debe ser única en la tabla vehicles
             'license_plate' => ['required', 'string', 'max:20', 'unique:vehicles,license_plate'], 
+            'is_frequent' => ['sometimes', 'boolean'],
         ];
     }
 }

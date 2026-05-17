@@ -8,8 +8,10 @@ use App\Http\Resources\api\v1\BookingResource;
 use App\Models\Booking;
 use App\Models\Trip;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Exceptions\ForbiddenException;
+use App\Exceptions\ConflictException;
+use App\Exceptions\UnprocessableEntityException;
+use App\Exceptions\BadRequestException;
 
 class BookingController extends Controller
 {
@@ -35,43 +37,22 @@ class BookingController extends Controller
         
         // El conductor no puede reservar su propio viaje
         if($trip->driver_id == $user->id) {
-            return response()->json([
-                'succes' => false,
-                'error' => [
-                    'code' => 'FORBIDDEN',
-                    'message' => 'No puedes reservar un viaje en el que eres el conductor',
-                    'data' => []
-                ]
-            ], 403);
+            throw new ForbiddenException('No puedes reservar un viaje en el que eres el conductor', 'FORBIDDEN');
         }
 
         // No se puede reservar si ya tiene una reserva activa para ese viaje
         $existingBooking = Booking::where('trip_id', $trip->id)
             ->where('passenger_id', $user->id)
-            ->whereIn('status', 'confirmed')
+            ->whereIn('status', ['confirmed'])
             ->exists();
 
         if ($existingBooking) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'DUPLICATE_BOOKING',
-                    'message' => 'Ya tienes una reserva activa para este viaje',
-                    'data' => []
-                ]
-            ], 409);
+            throw new ConflictException('Ya tienes una reserva activa para este viaje', 'DUPLICATE_BOOKING');
         }
 
         // Control de plazas disponibles
         if ($trip->seats_available < 1) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'UNPROCESSABLE_ENTITY',
-                    'message' => 'No quedan plazas disponibles en este viaje.',
-                    'data' => []
-                ]
-            ], 422);
+            throw new UnprocessableEntityException('No quedan plazas disponibles en este viaje.', 'UNPROCESSABLE_ENTITY');
         }
 
         // Creamos la reserva
@@ -97,49 +78,27 @@ class BookingController extends Controller
 
         // Validamos que la reserva pertenece al pasajero autenticado
         if ($booking->passenger_id !== $user->id) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'FORBIDDEN', 
-                    'message' => 'No puedes cancelar una reserva que no es tuya.', 
-                    'data' => []
-                ]
-            ], 403);
+            throw new ForbiddenException('No puedes cancelar una reserva que no es tuya.', 'FORBIDDEN');
         }
 
         // Validamos que la reserva no esté ya cancelada
         if ($booking->status === 'cancelled') {
-            return response()->json([
-                'success' => false, 
-                'error' => [
-                    'code' => 'BAD_REQUEST', 
-                    'message' => 'La reserva ya estaba cancelada.', 
-                    'data' => []
-                ]
-            ], 400);
+            throw new BadRequestException('La reserva ya estaba cancelada.', 'BAD_REQUEST');
         }
 
         // Validamos que la cancelación se realice al menos 3 horas antes de la salida del viaje
         if (now()->addHours(3)->isAfter($booking->trip->departure_time)) {
-            return response()->json([
-                'success' => false, 
-                'error' => [
-                    'code' => 'TIME_LIMIT_EXCEEDED', 
-                    // Añadimos la advertencia de las sanciones de la Fase 2 en el mensaje
-                    'message' => 'No puedes cancelar la reserva a menos de 3 horas de la salida. Si no te presentas, se aplicarán las sanciones correspondientes.', 
-                    'data' => []
-                ]
-            ], 403);
+            throw new ForbiddenException('No puedes cancelar la reserva a menos de 3 horas de la salida. Si no te presentas, se aplicarán las sanciones correspondientes.', 'TIME_LIMIT_EXCEEDED');
         }
 
-        // Camcelamos la reserva
+        // Cancelamos la reserva
         $booking->update(['status' => 'cancelled']);
 
         // Buscamos el viaje y le sumamos 1 a las plazas disponibles
         $trip = Trip::findOrFail($booking->trip_id);
         $trip->increment('seats_available', 1);
 
-        // AQUI HAY QUE METER EL CODIGO PARAENVIAR EMAIL DE CANCELACIÓN AL CONDUCTOR
+        // AQUI HAY QUE METER EL CODIGO PARA ENVIAR EMAIL DE CANCELACIÓN AL CONDUCTOR
 
         return response()->json([
             'success' => true,

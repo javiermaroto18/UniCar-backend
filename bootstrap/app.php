@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ApiException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -8,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Auth\AuthenticationException;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,11 +18,29 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
+
     ->withMiddleware(function (Middleware $middleware): void {
-        // En UniCar no es necesario esto, ya que se gestionan los roles en routes/api.php con sanctum
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
     })
 
-    ->withExceptions(function (Exceptions $exceptions): void {        
+    ->withExceptions(function (Exceptions $exceptions): void {           
+
+        // Excepciones personalizadas para la API
+        $exceptions->render(function (ApiException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => $e->getErrorCode(),
+                    'message' => $e->getMessage(),
+                    'data' => $e->getData(),
+                ],
+            ], $e->getStatusCode());
+        });
+
         // Error de no autenticado (401 - Sanctum)
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             return response()->json([
@@ -69,6 +89,18 @@ return Application::configure(basePath: dirname(__DIR__))
                     'data' => [],
                 ],
             ], 404);
+        });
+
+        // Error de permisos no autorizados (403)
+        $exceptions->render(function (UnauthorizedException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'UNAUTHORIZED',
+                    'message' => 'No tienes permisos para realizar esta acción',
+                    'data' => [],
+                ],
+            ], 403);
         });
     })
     ->create();

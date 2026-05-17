@@ -17,8 +17,17 @@ class TripResource extends JsonResource
         return [
             // Devolvemos los campos del viaje, incluyendo información del conductor
             'id' => $this->id,
-            'driver_id' => $this->driver_id,
-            'vehicle_id' => $this->vehicle_id,
+            // Información del conductor
+            'driver' => [
+                'id' => $this->driver->id,
+                'name' => $this->driver->name,
+                'avatar' => $this->driver->avatar,
+            ],
+            'vehicle' => [
+                'id' => $this->vehicle->id,
+                'brand_model' => $this->vehicle->brand_model,
+                'license_plate' => $this->vehicle->license_plate,
+            ],
             'origin' => $this->origin,
             'destination' => $this->destination,
             'departure_time' => $this->departure_time,
@@ -27,14 +36,8 @@ class TripResource extends JsonResource
             'price_per_seat' => $this->price_per_seat,
             'status' => $this->status,
             'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-
-            // Información del conductor
-            'driver' => [
-                'id' => $this->driver->id,
-                'name' => $this->driver->name,
-                'avatar' => $this->driver->avatar,
-            ]
+            'updated_at' => $this->updated_at
         ];
     }
 }
+    

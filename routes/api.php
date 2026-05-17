@@ -19,7 +19,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
 
         // Rutas para la gestión de usuarios (solo para administradores)
-        Route::get('/users', [UserController::class, 'index']);
+        Route::get('/users', [UserController::class, 'index'])->middleware('role:admin');
 
         // Gestión de sesión
         Route::post('/logout', [AuthController::class, 'logout']);

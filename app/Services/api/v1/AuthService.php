@@ -18,6 +18,9 @@ class AuthService
             'email' => $data['email'],
             'password' => Hash::make($data['password']), 
         ]);
+
+        $user->assignRole('student');
+
         $token = $user->createToken('api-token-v1')->plainTextToken;
 
         return [

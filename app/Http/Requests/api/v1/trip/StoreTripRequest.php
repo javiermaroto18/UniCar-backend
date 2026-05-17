@@ -26,7 +26,7 @@ class StoreTripRequest extends FormRequest
             'vehicle_id' => ['required', 'integer'],
             'origin' => ['required', 'string', 'max:255'],
             'destination' => ['required', 'string', 'max:255'],
-            'departure_time' => ['required', 'date', 'after:now'],
+            'departure_time' => ['required', 'date', 'after:now'], // Formato: YYYY-MM-DD HH:MM:SS y debe ser una fecha futura
             'seats_total' => ['required', 'integer', 'min:1', 'max:8'],
             'price_per_seat' => ['required', 'numeric', 'min:0', 'max:100'],
         ];

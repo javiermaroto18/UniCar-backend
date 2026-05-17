@@ -9,6 +9,8 @@ use App\Models\Booking;
 use App\Http\Requests\api\v1\trip\UpdateTripRequest;
 use App\Models\Trip;
 use Illuminate\Http\Request;
+use App\Exceptions\ForbiddenException;
+use App\Exceptions\BadRequestException;
 
 class TripController extends Controller
 {
@@ -17,8 +19,8 @@ class TripController extends Controller
     {
         $query = Trip::query();
 
-        // Reglas base obligatorias: Solo viajes activos y que aún no hayan salido
-        $query -> where('status', 'active') -> where('departure_time', '>', now());
+        // Solo viajes activos y que aún no hayan salido
+        $query->where('status', 'scheduled')->where('departure_time', '>', now());
 
         // Filtro de Origen
         if ($request->filled('origin')) {
@@ -44,25 +46,31 @@ class TripController extends Controller
         return TripResource::collection($trips);
     }
 
+    // GET /api/v1/trips/me
+    public function myTrips(Request $request)
+    {
+        $user = $request->user();
+        
+        // Obtenemos todos los viajes de este conductor ordenados por fecha
+        $trips = Trip::where('driver_id', $user->id)
+                     ->orderBy('departure_time', 'desc')
+                     ->get();
+
+        return TripResource::collection($trips);
+    }
+
     // POST /api/v1/trips
     public function store(StoreTripRequest $request)
     {
         $user = $request->user();
-        // Bloqueamos a los usuarios que no son conductores verificados para que no puedan publicar viajes
+        
+        // Bloqueamos a los usuarios que no son conductores verificados
         if (!$user->is_verified_driver) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'FORBIDDEN',
-                    'message' => 'No puedes publicar un viaje. Por favor, registra un vehículo primero.',
-                    'data' => []
-                ]
-            ], 403);
+            throw new ForbiddenException('No puedes publicar un viaje. Por favor, registra un vehículo primero.', 'FORBIDDEN');
         }
 
         $data = $request->validated();
 
-        // Creamos el viaje en la base de datos
         $trip = Trip::create([
             'driver_id' => $user->id,
             'vehicle_id' => $data['vehicle_id'],
@@ -70,11 +78,9 @@ class TripController extends Controller
             'destination' => $data['destination'],
             'departure_time' => $data['departure_time'],
             'seats_total' => $data['seats_total'],
-            // Regla: Al crearlo, las plazas disponibles son iguales a las totales
             'seats_available' => $data['seats_total'],
             'price_per_seat' => $data['price_per_seat'],
-            // Regla: El estado inicial siempre es activo
-            'status' => 'active', 
+            'status' => 'scheduled', 
         ]);
 
         return new TripResource($trip);
@@ -83,25 +89,25 @@ class TripController extends Controller
     // GET /api/v1/trips/{id}
     public function show($id)
     {
-        // Buscamos el viaje por su ID. Si no existe, lanzará un error 404 automáticamente.
+        // findOrFail ya lanza ModelNotFoundException, que tu bootstrap/app.php captura como 404
         $trip = Trip::findOrFail($id);
         return new TripResource($trip);
     }
 
-    // PUT|PATCH /api/v1/trips/{id}
+    // PUT /api/v1/trips/{id}
     public function update(UpdateTripRequest $request, $id)
     {
         $trip = Trip::findOrFail($id);
         $user = $request->user();
 
-        // Validamos que el viaje pertenece al conductor autenticado
+        // Validamos propiedad del viaje
         if ($trip->driver_id !== $user->id) {
-            return response()->json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'No puedes editar un viaje que no es tuyo.', 'data' => []]], 403);
+            throw new ForbiddenException('No puedes editar un viaje que no es tuyo.', 'FORBIDDEN');
         }
 
-        // Solo editamos viajes que no tengan reservas confirmadas
+        // Solo editamos viajes sin reservas
         if ($trip->seats_available < $trip->seats_total) {
-            return response()->json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'No puedes editar este viaje porque ya hay pasajeros con reservas confirmadas.', 'data' => []]], 403);
+            throw new ForbiddenException('No puedes editar este viaje porque ya hay pasajeros con reservas confirmadas.', 'TRIP_HAS_BOOKINGS');
         }
 
         $trip->update($request->validated());
@@ -114,38 +120,31 @@ class TripController extends Controller
         $trip = Trip::findOrFail($id);
         $user = $request->user();
 
-        // Validar que el viaje pertenece al conductor autenticado
+        // Validar propiedad
         if ($trip->driver_id !== $user->id) {
-            return response()->json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'No puedes cancelar un viaje que no es tuyo.', 'data' => []]], 403);
+            throw new ForbiddenException('No puedes cancelar un viaje que no es tuyo.', 'FORBIDDEN');
         }
 
-        // Validamos el estado del viaje. Solo se pueden cancelar viajes activos.
+        // Validar estado
         if ($trip->status === 'cancelled') {
-            return response()->json(['success' => false, 'error' => ['code' => 'BAD_REQUEST', 'message' => 'El viaje ya estaba cancelado.', 'data' => []]], 400);
+            throw new BadRequestException('El viaje ya estaba cancelado.', 'BAD_REQUEST');
+        }
+        if ($trip->status === 'completed') {
+            throw new BadRequestException('No puedes cancelar un viaje que ya ha sido completado.', 'BAD_REQUEST');
         }
 
-        // Limite de 3 horas para cancelar el viaje. Si quedan menos de 3 horas para la salida, no se puede cancelar.
+        // Límite de 3 horas
         if (now()->addHours(3)->isAfter($trip->departure_time)) {
-            return response()->json([
-                'success' => false, 
-                'error' => [
-                    'code' => 'TIME_LIMIT_EXCEEDED', 
-                    'message' => 'No puedes cancelar el viaje a menos de 3 horas de la salida.', 
-                    'data' => []
-                ]
-            ], 403);
+            throw new ForbiddenException('No puedes cancelar el viaje a menos de 3 horas de la salida.', 'TIME_LIMIT_EXCEEDED');
         }
 
-        // Cancelamos el viaje
         $trip->update(['status' => 'cancelled']);
 
-        // Cancelar en cascada todas las reservas asociadas a este viaje
+        // Cancelación en cascada
         $bookings = Booking::where('trip_id', $trip->id)->get();
         foreach($bookings as $booking){
             $booking->update(['status' => 'cancelled']);
-
-            //AQUI HAY QUE METER EL CODIGO DE ENVIAR EMAILS DE INFORMACION DE LO QUE HA PASADO A LOS VIAJEROS
-            //TAMBIEN HAY QUE METER EL METODO DE REFOUND DEL DINERO A LOS USUARIOS
+            // TODO: Enviar emails en Fase 2
         }
         
         return response()->json([

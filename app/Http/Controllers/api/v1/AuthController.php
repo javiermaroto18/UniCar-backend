@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\api\v1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\Auth\LoginRequest;
-use App\Http\Requests\Api\V1\Auth\RegisterRequest;
+use App\Http\Requests\api\v1\auth\LoginRequest;
+use App\Http\Requests\api\v1\auth\RegisterRequest;
 use App\Http\Resources\api\v1\AuthResource;
+use App\Http\Resources\api\v1\UserResource;
 use App\Services\api\v1\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -57,5 +58,34 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Sesión cerrada en todos los dispositivos de forma segura.',
         ], 200);
+    }
+
+    // Obtener el usuario autenticado
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'success' => true,
+            'data' => new UserResource($user)
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        // Validamos que nos envíen el nombre
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        $user = $request->user();
+        $user->update([
+            'name' => $request->name
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Perfil actualizado correctamente.',
+            'data' => new UserResource($user)
+        ]);
     }
 }

@@ -43,7 +43,7 @@ class BookingController extends Controller
         // No se puede reservar si ya tiene una reserva activa para ese viaje
         $existingBooking = Booking::where('trip_id', $trip->id)
             ->where('passenger_id', $user->id)
-            ->whereIn('status', ['confirmed'])
+            ->whereIn('status', ['pending', 'paid'])
             ->exists();
 
         if ($existingBooking) {
@@ -61,7 +61,7 @@ class BookingController extends Controller
             'passenger_id' => $user->id,
             'seats_booked' => 1,
             'total_price' => $trip->price_per_seat,
-            'status' => 'confirmed',
+                        'status' => 'pending',
         ]);
 
         // Decrementamos las plazas disponibles del viaje

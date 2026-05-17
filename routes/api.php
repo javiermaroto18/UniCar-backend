@@ -17,6 +17,7 @@ Route::prefix('v1')->group(function () {
         
         // Ruta para obtener los datos del usuario autenticado
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/me', [AuthController::class, 'updateProfile']); // Actualización de perfil
 
         // Rutas para la gestión de usuarios (solo para administradores)
         Route::get('/users', [UserController::class, 'index'])->middleware('role:admin');
@@ -31,6 +32,7 @@ Route::prefix('v1')->group(function () {
 
         // Rutas para la gestión de viajes
         Route::get('/trips', [TripController::class, 'index']);
+        Route::get('/trips/me', [TripController::class, 'myTrips']);
         Route::get('/trips/{id}', [TripController::class, 'show']);
         Route::post('/trips', [TripController::class, 'store']);
         Route::put('/trips/{id}', [TripController::class, 'update']);

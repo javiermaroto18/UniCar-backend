@@ -46,6 +46,19 @@ class TripController extends Controller
         return TripResource::collection($trips);
     }
 
+    // GET /api/v1/trips/me
+    public function myTrips(Request $request)
+    {
+        $user = $request->user();
+        
+        // Obtenemos todos los viajes de este conductor ordenados por fecha
+        $trips = Trip::where('driver_id', $user->id)
+                     ->orderBy('departure_time', 'desc')
+                     ->get();
+
+        return TripResource::collection($trips);
+    }
+
     // POST /api/v1/trips
     public function store(StoreTripRequest $request)
     {

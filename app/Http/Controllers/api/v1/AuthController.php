@@ -70,4 +70,22 @@ class AuthController extends Controller
             'data' => new UserResource($user)
         ]);
     }
+
+    public function updateProfile(Request $request)
+    {
+        // Validamos que nos envíen el nombre
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        $user = $request->user();
+        $user->update([
+            'name' => $request->name
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Perfil actualizado correctamente.',
+            'data' => new UserResource($user)
+        ]);
+    }
 }

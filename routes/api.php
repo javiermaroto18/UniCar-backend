@@ -29,6 +29,8 @@ Route::prefix('v1')->group(function () {
         // Rutas para la gestión de vehículos
         Route::get('/vehicles/me', [VehicleController::class, 'index']);
         Route::post('/vehicles', [VehicleController::class, 'store']);
+        Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
+        Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
         // Rutas para la gestión de viajes
         Route::get('/trips', [TripController::class, 'index']);

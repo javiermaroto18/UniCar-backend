@@ -18,6 +18,8 @@ class VehicleResource extends JsonResource
             'id' => $this->id,
             'brand_model' => $this->brand_model,
             'license_plate' => $this->license_plate,
+            'is_frequent' => (bool) $this->is_frequent,
+            'is_active' => (bool) $this->is_active,
             'created_at' => $this->created_at->toDateString(),
         ];
     }

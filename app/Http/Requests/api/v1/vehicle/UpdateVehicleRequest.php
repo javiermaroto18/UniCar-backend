@@ -4,14 +4,14 @@ namespace App\Http\Requests\api\v1\vehicle;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreVehicleRequest extends FormRequest
+class UpdateVehicleRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;  // Lo ponemos en true porque ya se gestiona en la ruta con Sanctum
+        return true;
     }
 
     /**
@@ -21,12 +21,14 @@ class StoreVehicleRequest extends FormRequest
      */
     public function rules(): array
     {
+
+
         return [
-            'brand' => ['required', 'string', 'max:50'],
-            'model' => ['required', 'string', 'max:50'],
-            // 'color' => ['required', 'string', 'max:30'],
-            // La matrícula debe ser única en la tabla vehicles
-            'license_plate' => ['required', 'string', 'max:20', 'unique:vehicles,license_plate'], 
+            'brand' => ['sometimes', 'string', 'max:50'],
+            'model' => ['sometimes', 'string', 'max:50'],
+            // 'color' => ['sometimes', 'string', 'max:30'],
+            'license_plate' => ['prohibited'], // No permitimos cambiar la matricula
+            // 'license_plate' => ['sometimes', 'string', 'max:20', 'unique:vehicles,license_plate,' . $this->route('vehicle')->id], 
             'is_frequent' => ['sometimes', 'boolean'],
         ];
     }

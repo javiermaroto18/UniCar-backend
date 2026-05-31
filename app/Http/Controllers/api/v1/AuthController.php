@@ -10,6 +10,7 @@ use App\Http\Resources\api\v1\UserResource;
 use App\Services\api\v1\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -71,16 +72,34 @@ class AuthController extends Controller
         ]);
     }
 
+    // Actualizar el perfil del usuario (Nombre, Email de notificaciones y Avatar)
     public function updateProfile(Request $request)
     {
-        // Validamos que nos envíen el nombre
+        $user = $request->user();
         $request->validate([
             'name' => 'required|string|max:255',
+            'notification_email' => 'nullable|email|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Máximo 2MB
         ]);
-        $user = $request->user();
-        $user->update([
-            'name' => $request->name
-        ]);
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                // Extraemos la ruta relativa de la URL completa
+                $oldPath = str_replace(url('storage') . '/', '', $user->avatar);
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            $path = $request->file('avatar')->store('avatars', 'public'); //Almacenamos la foto en la carpeta de avatars dentro de \app\storage\app\public\avatars
+            $user->avatar = url('storage/' . $path); // Asignamos la nueva URL al usuario
+        }
+
+        $user->name = $request->name;
+        
+        if ($request->has('notification_email')) {
+            $user->notification_email = $request->notification_email;
+        }
+
+        $user->save();
 
         return response()->json([
             'success' => true,

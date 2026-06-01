@@ -25,6 +25,8 @@ return new class extends Migration
             $table->string('driving_license_path')->nullable(); // Ruta de la foto del DNI/Carnet
             $table->boolean('is_verified_driver')->default(false);
 
+            $table->json('preferences')->nullable(); // Para almacenar las preferencias de viaje como un JSON
+
             $table->rememberToken();
             $table->timestamps();
         });

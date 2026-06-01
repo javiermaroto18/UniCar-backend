@@ -27,6 +27,7 @@ class User extends Authenticatable
         'notification_email',
         'driving_license_path',
         'is_verified_driver',
+        'preferences',
     ];
 
     /**
@@ -50,6 +51,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified_driver' => 'boolean',
+            'preferences' => 'array',
         ];
     }
 

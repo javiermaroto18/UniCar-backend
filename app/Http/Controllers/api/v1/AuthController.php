@@ -89,14 +89,18 @@ class AuthController extends Controller
                 Storage::disk('public')->delete($oldPath);
             }
 
-            $path = $request->file('avatar')->store('avatars', 'public'); //Almacenamos la foto en la carpeta de avatars dentro de \app\storage\app\public\avatars
+            $path = $request->file('avatar')->store('avatars', 'public'); //Almacenamos la foto en la carpeta de avatars dentro de \storage\app\public\avatars
             $user->avatar = url('storage/' . $path); // Asignamos la nueva URL al usuario
         }
 
         $user->name = $request->name;
         
         if ($request->has('notification_email')) {
-            $user->notification_email = $request->notification_email;
+            if (empty($request->notification_email) || $request->notification_email === 'null') {
+                $user->notification_email = null;
+            } else {
+                $user->notification_email = $request->notification_email;
+            }
         }
 
         $user->save();
@@ -106,5 +110,58 @@ class AuthController extends Controller
             'message' => 'Perfil actualizado correctamente.',
             'data' => new UserResource($user)
         ]);
+    }
+
+    // Actualizar las preferencias de viaje del usuario
+    public function updatePreferences(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'preferences' => 'required|array',
+        ]);
+
+        $user->preferences = $request->preferences;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Preferencias actualizadas correctamente.',
+            'data' => new UserResource($user)
+        ]);
+    }
+
+    // Cambiar la contraseña del usuario, endpoint
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($request->new_password === $request->current_password) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La nueva contraseña no puede ser igual a la actual.',
+            ], 409);
+        }
+
+        if (!password_verify($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La contraseña actual es incorrecta.',
+            ], 400);
+        }
+
+        $user->password = bcrypt($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Contraseña actualizada correctamente.',
+        ]);
+
     }
 }

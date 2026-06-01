@@ -18,6 +18,8 @@ Route::prefix('v1')->group(function () {
         // Ruta para obtener los datos del usuario autenticado
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/me', [AuthController::class, 'updateProfile']); // Actualización de perfil
+        Route::put('/me/preferences', [AuthController::class, 'updatePreferences']); // Actualización de preferencias de viaje
+        Route::put('/me/change-password', [AuthController::class, 'changePassword']);
 
         // Rutas para la gestión de usuarios (solo para administradores)
         Route::get('/users', [UserController::class, 'index'])->middleware('role:admin');

@@ -17,33 +17,50 @@ class TripController extends Controller
     // GET /api/v1/trips
     public function index(Request $request)
     {
-        $query = Trip::query();
+        $query = Trip::select('trips.*')
+                     ->join('users', 'trips.driver_id', '=', 'users.id');
 
         // Solo viajes activos y que aún no hayan salido
-        $query->where('status', 'scheduled')->where('departure_time', '>', now());
+        $query->where('trips.status', 'scheduled')->where('trips.departure_time', '>', now());
 
         // Filtro de Origen
         if ($request->filled('origin')) {
-            $query->where('origin', 'like', '%' . $request->origin . '%');
+            $query->where('trips.origin', 'like', '%' . $request->origin . '%');
         }
 
         // Filtro de Destino
         if ($request->filled('destination')) {
-            $query->where('destination', 'like', '%' . $request->destination . '%');
+            $query->where('trips.destination', 'like', '%' . $request->destination . '%');
         }
 
         // Filtro de Fecha
         if ($request->filled('date')) {
-            $query->whereDate('departure_time', $request->date);
+            $query->whereDate('trips.departure_time', $request->date);
         }
 
         // Filtro de Plazas mínimas requeridas
         if ($request->filled('seats')) {
-            $query->where('seats_available', '>=', $request->seats);
+            $query->where('trips.seats_available', '>=', $request->seats);
         }
 
-        $trips = $query->orderBy('departure_time', 'asc')->paginate(15);
-        return TripResource::collection($trips);
+        // Ordenación dinamica
+        $filterOption = $request->input('filter', 'date_asc'); // 'date_asc' por defecto
+
+        switch ($filterOption) {
+            case 'price_asc':
+                $query->orderBy('trips.price_per_seat', 'asc');
+                break;
+            case 'name_asc':
+                $query->orderBy('users.name', 'asc');
+                break;
+            case 'date_asc':
+            default:
+                $query->orderBy('trips.departure_time', 'asc');
+                break;
+        }
+
+        $trips = $query->paginate(6);
+        return TripResource::collection($trips)->response()->getData(true);
     }
 
     // GET /api/v1/trips/me
@@ -89,8 +106,9 @@ class TripController extends Controller
     // GET /api/v1/trips/{id}
     public function show($id)
     {
-        // findOrFail ya lanza ModelNotFoundException, que tu bootstrap/app.php captura como 404
+        // findOrFail ya lanza ModelNotFoundException
         $trip = Trip::findOrFail($id);
+        $trip = Trip::with(['driver', 'bookings.passenger'])->findOrFail($id);
         return new TripResource($trip);
     }
 
@@ -144,7 +162,7 @@ class TripController extends Controller
         $bookings = Booking::where('trip_id', $trip->id)->get();
         foreach($bookings as $booking){
             $booking->update(['status' => 'cancelled']);
-            // TODO: Enviar emails en Fase 2
+            // Enviar emails en Fase 2
         }
         
         return response()->json([

@@ -74,6 +74,19 @@ class AuthController extends Controller
         ]);
     }
 
+    // POST /api/v1/auth/logout-others
+    public function logoutOtherDevices(Request $request)
+    {
+        $user = $request->user();
+
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Se han cerrado todas las demás sesiones correctamente.'
+        ]);
+    }
+
     // Actualizar el perfil del usuario (Nombre, Email de notificaciones y Avatar)
     public function updateProfile(Request $request)
     {

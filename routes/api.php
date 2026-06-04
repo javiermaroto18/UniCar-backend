@@ -27,6 +27,7 @@ Route::prefix('v1')->group(function () {
         // Gestión de sesión
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+        Route::post('/logout-others', [AuthController::class, 'logoutOtherDevices']);
 
         // Rutas para la gestión de vehículos
         Route::get('/vehicles/me', [VehicleController::class, 'index']);

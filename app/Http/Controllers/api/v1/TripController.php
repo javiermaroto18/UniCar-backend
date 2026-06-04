@@ -43,6 +43,16 @@ class TripController extends Controller
             $query->where('trips.seats_available', '>=', $request->seats);
         }
 
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            // Buscamos en origen, destino y nombre del conductor
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('trips.origin', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('trips.destination', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('users.name', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
         // Ordenación dinamica
         $filterOption = $request->input('filter', 'date_asc'); // 'date_asc' por defecto
 

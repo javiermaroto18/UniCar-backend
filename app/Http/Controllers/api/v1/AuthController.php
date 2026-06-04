@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+use App\Exceptions\ConflictException;
+
 class AuthController extends Controller
 {
     private AuthService $authService;
@@ -142,17 +144,11 @@ class AuthController extends Controller
         ]);
 
         if ($request->new_password === $request->current_password) {
-            return response()->json([
-                'success' => false,
-                'message' => 'La nueva contraseña no puede ser igual a la actual.',
-            ], 409);
+            throw new ConflictException('La contraseña actual es incorrecta.', 'INVALID_CURRENT_PASSWORD');
         }
 
         if (!password_verify($request->current_password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'La contraseña actual es incorrecta.',
-            ], 400);
+            throw new ConflictException('La contraseña actual es incorrecta.', 'INVALID_CURRENT_PASSWORD');
         }
 
         $user->password = bcrypt($request->new_password);

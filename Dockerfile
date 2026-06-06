@@ -1,5 +1,7 @@
-# ── UniCar backend (Laravel 12 / PHP 8.2) — imagen para Render ──────────────
-FROM php:8.2-apache
+# ── UniCar backend (Laravel 12 / PHP 8.4) — imagen para Render ──────────────
+# PHP 8.4 porque composer.lock resuelve symfony 8.0 (requiere >=8.4) y
+# spatie/laravel-permission (requiere >=8.3). Coincide con el PHP local.
+FROM php:8.4-apache
 
 # Dependencias del sistema necesarias para las extensiones de PHP
 RUN apt-get update && apt-get install -y \

@@ -14,6 +14,7 @@ class Vehicle extends Model
         'brand_model',
         'license_plate',
         'is_frequent',
+        'is_active',
     ];
 
     protected function casts(): array

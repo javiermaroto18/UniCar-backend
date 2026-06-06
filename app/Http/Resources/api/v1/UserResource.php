@@ -24,6 +24,7 @@ class UserResource extends JsonResource
             'avatar' => $this->avatar, 
             'notification_email' => $this->notification_email,
             'is_verified_driver' => $this->is_verified_driver,
+            'preferences' => $this->preferences,
             
             // Convertimos a fecha "YYYY-MM-DD"
             'created_at' => $this->created_at->toDateString(),

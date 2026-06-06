@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('brand_model');
             $table->string('license_plate')->unique();
             $table->boolean('is_frequent')->default(false); //Para indicar vehiculo frecuente del conductor 
+            $table->boolean('is_active')->default(true); // Para indicar si el vehículo ha sido desactivado o no por el usuario
             $table->timestamps();
         });
     }

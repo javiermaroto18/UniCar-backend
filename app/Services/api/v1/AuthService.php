@@ -35,9 +35,7 @@ class AuthService
         // Si el usuario no existe o la contraseña (hasheada) no coincide, lanzamos excepción
         $user = User::where('email', $data['email'])->first();
         if (!$user || !Hash::check($data['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales no son correctas.'],
-            ]);
+            throw ValidationException::withMessages(['email' => ['Las credenciales no son correctas.'],]);
         }
 
         $token = $user->createToken('api-token-v1')->plainTextToken;

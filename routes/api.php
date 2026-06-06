@@ -18,6 +18,8 @@ Route::prefix('v1')->group(function () {
         // Ruta para obtener los datos del usuario autenticado
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/me', [AuthController::class, 'updateProfile']); // Actualización de perfil
+        Route::put('/me/preferences', [AuthController::class, 'updatePreferences']); // Actualización de preferencias de viaje
+        Route::put('/me/change-password', [AuthController::class, 'changePassword']);
 
         // Rutas para la gestión de usuarios (solo para administradores)
         Route::get('/users', [UserController::class, 'index'])->middleware('role:admin');
@@ -25,10 +27,13 @@ Route::prefix('v1')->group(function () {
         // Gestión de sesión
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+        Route::post('/logout-others', [AuthController::class, 'logoutOtherDevices']);
 
         // Rutas para la gestión de vehículos
         Route::get('/vehicles/me', [VehicleController::class, 'index']);
         Route::post('/vehicles', [VehicleController::class, 'store']);
+        Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
+        Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
         // Rutas para la gestión de viajes
         Route::get('/trips', [TripController::class, 'index']);

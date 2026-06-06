@@ -22,6 +22,7 @@ class TripResource extends JsonResource
                 'id' => $this->driver->id,
                 'name' => $this->driver->name,
                 'avatar' => $this->driver->avatar,
+                'is_verified_driver' => $this->driver->is_verified_driver,
             ],
             'vehicle' => [
                 'id' => $this->vehicle->id,
@@ -35,6 +36,8 @@ class TripResource extends JsonResource
             'seats_available' => $this->seats_available,
             'price_per_seat' => $this->price_per_seat,
             'status' => $this->status,
+            // Añadido para mostrar las reservas asociadas al viaje, con información del pasajero
+            'bookings' => $this->whenLoaded('bookings'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];

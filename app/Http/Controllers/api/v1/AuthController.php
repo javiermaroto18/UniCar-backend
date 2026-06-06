@@ -10,6 +10,9 @@ use App\Http\Resources\api\v1\UserResource;
 use App\Services\api\v1\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
+use App\Exceptions\ConflictException;
 
 class AuthController extends Controller
 {
@@ -71,21 +74,103 @@ class AuthController extends Controller
         ]);
     }
 
+    // POST /api/v1/auth/logout-others
+    public function logoutOtherDevices(Request $request)
+    {
+        $user = $request->user();
+
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Se han cerrado todas las demás sesiones correctamente.'
+        ]);
+    }
+
+    // Actualizar el perfil del usuario (Nombre, Email de notificaciones y Avatar)
     public function updateProfile(Request $request)
     {
-        // Validamos que nos envíen el nombre
+        $user = $request->user();
         $request->validate([
             'name' => 'required|string|max:255',
+            'notification_email' => 'nullable|email|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Máximo 2MB
         ]);
-        $user = $request->user();
-        $user->update([
-            'name' => $request->name
-        ]);
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                // Extraemos la ruta relativa de la URL completa
+                $oldPath = str_replace(url('storage') . '/', '', $user->avatar);
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            $path = $request->file('avatar')->store('avatars', 'public'); //Almacenamos la foto en la carpeta de avatars dentro de \storage\app\public\avatars
+            $user->avatar = url('storage/' . $path); // Asignamos la nueva URL al usuario
+        }
+
+        $user->name = $request->name;
+        
+        if ($request->has('notification_email')) {
+            if (empty($request->notification_email) || $request->notification_email === 'null') {
+                $user->notification_email = null;
+            } else {
+                $user->notification_email = $request->notification_email;
+            }
+        }
+
+        $user->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Perfil actualizado correctamente.',
             'data' => new UserResource($user)
         ]);
+    }
+
+    // Actualizar las preferencias de viaje del usuario
+    public function updatePreferences(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'preferences' => 'required|array',
+        ]);
+
+        $user->preferences = $request->preferences;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Preferencias actualizadas correctamente.',
+            'data' => new UserResource($user)
+        ]);
+    }
+
+    // Cambiar la contraseña del usuario, endpoint
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($request->new_password === $request->current_password) {
+            throw new ConflictException('La contraseña actual es incorrecta.', 'INVALID_CURRENT_PASSWORD');
+        }
+
+        if (!password_verify($request->current_password, $user->password)) {
+            throw new ConflictException('La contraseña actual es incorrecta.', 'INVALID_CURRENT_PASSWORD');
+        }
+
+        $user->password = bcrypt($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Contraseña actualizada correctamente.',
+        ]);
+
     }
 }

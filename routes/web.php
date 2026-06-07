@@ -8,8 +8,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
 use Illuminate\Support\Facades\Route;
 
+// La raíz del backend no sirve contenido propio (el front está en Vercel):
+// redirigimos al panel de administración.
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/admin');
 });
 
 /*

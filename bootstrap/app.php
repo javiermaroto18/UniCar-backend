@@ -20,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
 
     ->withMiddleware(function (Middleware $middleware): void {
+        // Render (y otros PaaS) terminan el TLS en su proxy y reenvían la
+        // petición por HTTP al contenedor. Confiamos en el proxy para que
+        // Laravel respete la cabecera X-Forwarded-Proto y genere los assets
+        // (Vite) con https en vez de http. Evita los errores de Mixed Content.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

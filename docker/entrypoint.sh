@@ -21,5 +21,11 @@ php artisan db:seed --class=RoleSeeder --force || true
 # Asignar rol admin a los emails de la variable ADMIN_EMAILS (idempotente).
 php artisan db:seed --class=AdminSeeder --force || true
 
+# Reasegurar permisos de storage ANTES de arrancar Apache: los comandos artisan
+# de arriba se ejecutan como root y pueden crear ficheros (p. ej. laravel.log)
+# que luego www-data no podría escribir, provocando errores en cascada.
+chown -R www-data:www-data storage bootstrap/cache || true
+chmod -R 775 storage bootstrap/cache || true
+
 # Arrancar Apache en primer plano.
 exec apache2-foreground

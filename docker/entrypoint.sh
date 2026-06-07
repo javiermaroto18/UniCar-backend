@@ -18,5 +18,8 @@ php artisan route:cache || true
 php artisan migrate --force || true
 php artisan db:seed --class=RoleSeeder --force || true
 
+# Asignar rol admin a los emails de la variable ADMIN_EMAILS (idempotente).
+php artisan db:seed --class=AdminSeeder --force || true
+
 # Arrancar Apache en primer plano.
 exec apache2-foreground

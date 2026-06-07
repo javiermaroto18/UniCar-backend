@@ -25,6 +25,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // El panel de admin (Inertia + Vue) usa sesión web: añadimos el
+        // middleware de Inertia solo al grupo 'web', no a la API.
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
+
+        // Las peticiones web no autenticadas van al login del panel de admin.
+        // La API (que envía Accept: application/json) sigue recibiendo 401 JSON.
+        $middleware->redirectGuestsTo('/admin/login');
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {           
@@ -43,14 +53,20 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Error de no autenticado (401 - Sanctum)
         $exceptions->render(function (AuthenticationException $e, Request $request) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'UNAUTHORIZED',
-                    'message' => 'No tienes permisos. Por favor, inicia sesión.',
-                    'data' => [],
-                ],
-            ], 401);
+            // La API (Accept: application/json o rutas /api/*) recibe 401 JSON.
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code' => 'UNAUTHORIZED',
+                        'message' => 'No tienes permisos. Por favor, inicia sesión.',
+                        'data' => [],
+                    ],
+                ], 401);
+            }
+
+            // El panel de admin (navegador) se redirige al formulario de login.
+            return redirect()->guest('/admin/login');
         });
 
         // Errores de validación (422)

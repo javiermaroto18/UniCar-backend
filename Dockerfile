@@ -1,6 +1,18 @@
 # ── UniCar backend (Laravel 12 / PHP 8.4) — imagen para Render ──────────────
 # PHP 8.4 porque composer.lock resuelve symfony 8.0 (requiere >=8.4) y
 # spatie/laravel-permission (requiere >=8.3). Coincide con el PHP local.
+
+# ── Etapa 1: compilar los assets del panel de admin (Vue 3 + Inertia) ───────
+# Se hace en una imagen Node aparte para no instalar Node en la imagen final.
+# El resultado (public/build con el manifest de Vite) se copia a la etapa PHP.
+FROM node:22-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json vite.config.js ./
+RUN npm ci
+COPY resources ./resources
+RUN npm run build
+
+# ── Etapa 2: imagen PHP de producción ───────────────────────────────────────
 FROM php:8.4-apache
 
 # Dependencias del sistema necesarias para las extensiones de PHP
@@ -36,6 +48,9 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 
 # Copiar el resto de la aplicación
 COPY . .
+
+# Copiar los assets ya compilados desde la etapa de Node (Vue + Inertia + Vite)
+COPY --from=assets /app/public/build ./public/build
 
 # Generar el autoloader optimizado y descubrir paquetes
 RUN composer dump-autoload --optimize --no-dev \

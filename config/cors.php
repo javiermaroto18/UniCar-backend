@@ -24,7 +24,13 @@ return [
         'http://localhost:5173,http://127.0.0.1:5173'
     )))),
 
-    'allowed_origins_patterns' => [],
+    // Permite cualquier despliegue del proyecto en Vercel (las URLs de preview
+    // cambian en cada deploy: unicar-frontend-<hash>-<team>.vercel.app).
+    // Configurable por env; por defecto cubre el proyecto unicar-frontend.
+    'allowed_origins_patterns' => array_filter(array_map('trim', explode('|||', env(
+        'CORS_ALLOWED_ORIGINS_PATTERNS',
+        '#^https://unicar-frontend-.*\.vercel\.app$#'
+    )))),
 
     'allowed_headers' => ['*'],
 

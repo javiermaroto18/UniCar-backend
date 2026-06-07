@@ -11,7 +11,7 @@ defineProps({
         <template v-for="(link, i) in links" :key="i">
             <span
                 v-if="!link.url"
-                class="px-3 py-1.5 text-sm text-slate-400 rounded-lg"
+                class="px-3 py-1.5 text-sm text-unicar-dim rounded-lg"
                 v-html="link.label"
             />
             <Link
@@ -21,8 +21,8 @@ defineProps({
                 :class="[
                     'px-3 py-1.5 text-sm rounded-lg border transition',
                     link.active
-                        ? 'bg-indigo-600 border-indigo-600 text-white'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50',
+                        ? 'bg-unicar-primary border-unicar-primary text-white'
+                        : 'bg-unicar-surface border-unicar-border text-unicar-muted hover:text-unicar-text hover:border-unicar-border-strong',
                 ]"
                 v-html="link.label"
             />

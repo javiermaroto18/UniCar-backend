@@ -1,8 +1,9 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import Pagination from '../../../Components/Pagination.vue';
+import ConfirmModal from '../../../Components/ConfirmModal.vue';
 
 const props = defineProps({
     users: { type: Object, required: true },
@@ -19,18 +20,60 @@ watch(search, (value) => {
     }, 300);
 });
 
+// --- Modal de confirmación (type-to-confirm) ---
+const modal = ref({ show: false, type: null, user: null });
+
+function askAdmin(user) {
+    modal.value = { show: true, type: 'admin', user };
+}
+function askDelete(user) {
+    modal.value = { show: true, type: 'delete', user };
+}
+function closeModal() {
+    modal.value = { show: false, type: null, user: null };
+}
+
+const modalConfig = computed(() => {
+    const u = modal.value.user;
+    if (!u) return {};
+    if (modal.value.type === 'admin') {
+        return u.is_admin
+            ? {
+                  title: 'Retirar administrador',
+                  message: `Vas a retirar los permisos de administrador a ${u.name}. Dejará de tener acceso al panel.`,
+                  confirmWord: 'CONFIRMAR',
+                  confirmLabel: 'Retirar admin',
+                  tone: 'danger',
+              }
+            : {
+                  title: 'Conceder administrador',
+                  message: `Vas a dar permisos de administrador a ${u.name}. Podrá acceder a este panel y gestionar toda la plataforma.`,
+                  confirmWord: 'CONFIRMAR',
+                  confirmLabel: 'Conceder admin',
+                  tone: 'primary',
+              };
+    }
+    return {
+        title: 'Eliminar usuario',
+        message: `Vas a eliminar a ${u.name} (${u.email}) de forma permanente. Esta acción no se puede deshacer.`,
+        confirmWord: 'ELIMINAR',
+        confirmLabel: 'Eliminar usuario',
+        tone: 'danger',
+    };
+});
+
+function onConfirm() {
+    const { type, user } = modal.value;
+    if (type === 'admin') {
+        router.patch(`/admin/users/${user.id}`, { action: 'toggle_admin' }, { preserveScroll: true, onFinish: closeModal });
+    } else if (type === 'delete') {
+        router.delete(`/admin/users/${user.id}`, { preserveScroll: true, onFinish: closeModal });
+    }
+}
+
+// Verificado de conductor: acción de bajo riesgo, instantánea (sin modal)
 function toggleVerified(user) {
     router.patch(`/admin/users/${user.id}`, { action: 'toggle_verified' }, { preserveScroll: true });
-}
-
-function toggleAdmin(user) {
-    router.patch(`/admin/users/${user.id}`, { action: 'toggle_admin' }, { preserveScroll: true });
-}
-
-function destroy(user) {
-    if (confirm(`¿Eliminar al usuario "${user.name}"? Esta acción no se puede deshacer.`)) {
-        router.delete(`/admin/users/${user.id}`, { preserveScroll: true });
-    }
 }
 </script>
 
@@ -44,12 +87,12 @@ function destroy(user) {
             v-model="search"
             type="search"
             placeholder="Buscar por nombre o email…"
-            class="w-full max-w-sm mb-4 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+            class="w-full max-w-sm mb-4 rounded-lg bg-unicar-surface border border-unicar-border px-3 py-2 text-sm text-unicar-text placeholder-unicar-dim focus:border-unicar-primary focus:ring-1 focus:ring-unicar-primary outline-none"
         />
 
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-unicar-surface rounded-xl border border-unicar-border overflow-hidden">
             <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-left">
+                <thead class="bg-white/5 text-unicar-dim text-left text-xs uppercase tracking-wide">
                     <tr>
                         <th class="px-4 py-3 font-medium">#</th>
                         <th class="px-4 py-3 font-medium">Nombre</th>
@@ -61,53 +104,87 @@ function destroy(user) {
                         <th class="px-4 py-3 font-medium text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <tr v-for="u in users.data" :key="u.id" class="hover:bg-slate-50">
-                        <td class="px-4 py-3 text-slate-400">{{ u.id }}</td>
-                        <td class="px-4 py-3 font-medium text-slate-800">{{ u.name }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ u.email }}</td>
-                        <td class="px-4 py-3 text-center text-slate-600">{{ u.trips_count }}</td>
-                        <td class="px-4 py-3 text-center text-slate-600">{{ u.bookings_count }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <button
-                                @click="toggleVerified(u)"
-                                :class="[
-                                    'px-2 py-1 rounded-full text-xs font-medium',
-                                    u.is_verified_driver ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
-                                ]"
-                            >
-                                {{ u.is_verified_driver ? 'Sí' : 'No' }}
-                            </button>
+                <tbody class="divide-y divide-unicar-border">
+                    <tr v-for="u in users.data" :key="u.id" class="hover:bg-white/5 transition">
+                        <td class="px-4 py-3 text-unicar-dim">{{ u.id }}</td>
+                        <td class="px-4 py-3 font-medium text-unicar-text">{{ u.name }}</td>
+                        <td class="px-4 py-3 text-unicar-muted">{{ u.email }}</td>
+                        <td class="px-4 py-3 text-center text-unicar-muted">{{ u.trips_count }}</td>
+                        <td class="px-4 py-3 text-center text-unicar-muted">{{ u.bookings_count }}</td>
+
+                        <!-- Conductor verificado: toggle instantáneo -->
+                        <td class="px-4 py-3">
+                            <div class="flex justify-center">
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    :aria-checked="u.is_verified_driver"
+                                    @click="toggleVerified(u)"
+                                    :class="[
+                                        'relative inline-flex h-5 w-9 items-center rounded-full transition',
+                                        u.is_verified_driver ? 'bg-emerald-500' : 'bg-unicar-border-strong',
+                                    ]"
+                                >
+                                    <span
+                                        :class="[
+                                            'inline-block h-4 w-4 transform rounded-full bg-white transition',
+                                            u.is_verified_driver ? 'translate-x-4' : 'translate-x-0.5',
+                                        ]"
+                                    />
+                                </button>
+                            </div>
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <button
-                                @click="toggleAdmin(u)"
-                                :class="[
-                                    'px-2 py-1 rounded-full text-xs font-medium',
-                                    u.is_admin ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500',
-                                ]"
-                            >
-                                {{ u.is_admin ? 'Admin' : '—' }}
-                            </button>
+
+                        <!-- Admin: toggle con confirmación escrita -->
+                        <td class="px-4 py-3">
+                            <div class="flex justify-center">
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    :aria-checked="u.is_admin"
+                                    @click="askAdmin(u)"
+                                    :class="[
+                                        'relative inline-flex h-5 w-9 items-center rounded-full transition',
+                                        u.is_admin ? 'bg-unicar-primary' : 'bg-unicar-border-strong',
+                                    ]"
+                                >
+                                    <span
+                                        :class="[
+                                            'inline-block h-4 w-4 transform rounded-full bg-white transition',
+                                            u.is_admin ? 'translate-x-4' : 'translate-x-0.5',
+                                        ]"
+                                    />
+                                </button>
+                            </div>
                         </td>
+
                         <td class="px-4 py-3 text-right">
                             <button
-                                @click="destroy(u)"
-                                class="text-xs text-red-600 hover:text-red-800 font-medium"
+                                @click="askDelete(u)"
+                                class="text-xs text-red-400 hover:text-red-300 font-medium"
                             >
                                 Eliminar
                             </button>
                         </td>
                     </tr>
                     <tr v-if="users.data.length === 0">
-                        <td colspan="8" class="px-4 py-8 text-center text-slate-400">
-                            No se encontraron usuarios.
-                        </td>
+                        <td colspan="8" class="px-4 py-10 text-center text-unicar-dim">No se encontraron usuarios.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <Pagination :links="users.links" />
+
+        <ConfirmModal
+            :show="modal.show"
+            :title="modalConfig.title"
+            :message="modalConfig.message"
+            :confirm-word="modalConfig.confirmWord"
+            :confirm-label="modalConfig.confirmLabel"
+            :tone="modalConfig.tone"
+            @confirm="onConfirm"
+            @cancel="closeModal"
+        />
     </AdminLayout>
 </template>

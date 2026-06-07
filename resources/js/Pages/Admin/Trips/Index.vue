@@ -30,9 +30,9 @@ function cancelTrip(trip) {
 }
 
 const statusStyle = {
-    scheduled: 'bg-emerald-100 text-emerald-700',
-    completed: 'bg-slate-100 text-slate-600',
-    cancelled: 'bg-red-100 text-red-600',
+    scheduled: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
+    completed: 'bg-white/5 text-unicar-muted ring-unicar-border-strong',
+    cancelled: 'bg-red-500/15 text-red-300 ring-red-500/30',
 };
 const statusLabel = { scheduled: 'Programado', completed: 'Completado', cancelled: 'Cancelado' };
 
@@ -53,11 +53,11 @@ function formatDate(dt) {
                 v-model="search"
                 type="search"
                 placeholder="Buscar por origen o destino…"
-                class="flex-1 min-w-[200px] max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                class="flex-1 min-w-[200px] max-w-sm rounded-lg bg-unicar-surface border border-unicar-border px-3 py-2 text-sm text-unicar-text placeholder-unicar-dim focus:border-unicar-primary focus:ring-1 focus:ring-unicar-primary outline-none"
             />
             <select
                 v-model="status"
-                class="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                class="rounded-lg bg-unicar-surface border border-unicar-border px-3 py-2 text-sm text-unicar-text focus:border-unicar-primary focus:ring-1 focus:ring-unicar-primary outline-none"
             >
                 <option value="">Todos los estados</option>
                 <option value="scheduled">Programados</option>
@@ -66,9 +66,9 @@ function formatDate(dt) {
             </select>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-unicar-surface rounded-xl border border-unicar-border overflow-hidden">
             <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-left">
+                <thead class="bg-white/5 text-unicar-dim text-left text-xs uppercase tracking-wide">
                     <tr>
                         <th class="px-4 py-3 font-medium">#</th>
                         <th class="px-4 py-3 font-medium">Conductor</th>
@@ -80,16 +80,16 @@ function formatDate(dt) {
                         <th class="px-4 py-3 font-medium text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <tr v-for="t in trips.data" :key="t.id" class="hover:bg-slate-50">
-                        <td class="px-4 py-3 text-slate-400">{{ t.id }}</td>
-                        <td class="px-4 py-3 text-slate-700">{{ t.driver || '—' }}</td>
-                        <td class="px-4 py-3 font-medium text-slate-800">{{ t.origin }} → {{ t.destination }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ formatDate(t.departure_time) }}</td>
-                        <td class="px-4 py-3 text-center text-slate-600">{{ t.seats_available }}/{{ t.seats_total }}</td>
-                        <td class="px-4 py-3 text-right text-slate-600">{{ t.price_per_seat }} €</td>
+                <tbody class="divide-y divide-unicar-border">
+                    <tr v-for="t in trips.data" :key="t.id" class="hover:bg-white/5 transition">
+                        <td class="px-4 py-3 text-unicar-dim">{{ t.id }}</td>
+                        <td class="px-4 py-3 text-unicar-muted">{{ t.driver || '—' }}</td>
+                        <td class="px-4 py-3 font-medium text-unicar-text">{{ t.origin }} → {{ t.destination }}</td>
+                        <td class="px-4 py-3 text-unicar-muted">{{ formatDate(t.departure_time) }}</td>
+                        <td class="px-4 py-3 text-center text-unicar-muted">{{ t.seats_available }}/{{ t.seats_total }}</td>
+                        <td class="px-4 py-3 text-right text-unicar-muted">{{ t.price_per_seat }} €</td>
                         <td class="px-4 py-3 text-center">
-                            <span :class="['px-2 py-1 rounded-full text-xs font-medium', statusStyle[t.status]]">
+                            <span :class="['px-2 py-1 rounded-full text-xs font-medium ring-1', statusStyle[t.status]]">
                                 {{ statusLabel[t.status] }}
                             </span>
                         </td>
@@ -97,15 +97,15 @@ function formatDate(dt) {
                             <button
                                 v-if="t.status === 'scheduled'"
                                 @click="cancelTrip(t)"
-                                class="text-xs text-red-600 hover:text-red-800 font-medium"
+                                class="text-xs text-red-400 hover:text-red-300 font-medium"
                             >
                                 Cancelar
                             </button>
-                            <span v-else class="text-xs text-slate-300">—</span>
+                            <span v-else class="text-xs text-unicar-dim">—</span>
                         </td>
                     </tr>
                     <tr v-if="trips.data.length === 0">
-                        <td colspan="8" class="px-4 py-8 text-center text-slate-400">No se encontraron viajes.</td>
+                        <td colspan="8" class="px-4 py-10 text-center text-unicar-dim">No se encontraron viajes.</td>
                     </tr>
                 </tbody>
             </table>

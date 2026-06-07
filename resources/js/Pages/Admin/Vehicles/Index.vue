@@ -37,12 +37,12 @@ function toggle(v) {
             v-model="search"
             type="search"
             placeholder="Buscar por modelo o matrícula…"
-            class="w-full max-w-sm mb-4 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+            class="w-full max-w-sm mb-4 rounded-lg bg-unicar-surface border border-unicar-border px-3 py-2 text-sm text-unicar-text placeholder-unicar-dim focus:border-unicar-primary focus:ring-1 focus:ring-unicar-primary outline-none"
         />
 
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-unicar-surface rounded-xl border border-unicar-border overflow-hidden">
             <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-left">
+                <thead class="bg-white/5 text-unicar-dim text-left text-xs uppercase tracking-wide">
                     <tr>
                         <th class="px-4 py-3 font-medium">#</th>
                         <th class="px-4 py-3 font-medium">Propietario</th>
@@ -54,22 +54,22 @@ function toggle(v) {
                         <th class="px-4 py-3 font-medium text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <tr v-for="v in vehicles.data" :key="v.id" class="hover:bg-slate-50">
-                        <td class="px-4 py-3 text-slate-400">{{ v.id }}</td>
-                        <td class="px-4 py-3 text-slate-700">{{ v.owner || '—' }}</td>
-                        <td class="px-4 py-3 font-medium text-slate-800">{{ v.brand_model }}</td>
-                        <td class="px-4 py-3 text-slate-600 font-mono">{{ v.license_plate }}</td>
-                        <td class="px-4 py-3 text-center text-slate-600">{{ v.trips_count }}</td>
+                <tbody class="divide-y divide-unicar-border">
+                    <tr v-for="v in vehicles.data" :key="v.id" class="hover:bg-white/5 transition">
+                        <td class="px-4 py-3 text-unicar-dim">{{ v.id }}</td>
+                        <td class="px-4 py-3 text-unicar-muted">{{ v.owner || '—' }}</td>
+                        <td class="px-4 py-3 font-medium text-unicar-text">{{ v.brand_model }}</td>
+                        <td class="px-4 py-3 text-unicar-muted font-mono">{{ v.license_plate }}</td>
+                        <td class="px-4 py-3 text-center text-unicar-muted">{{ v.trips_count }}</td>
                         <td class="px-4 py-3 text-center">
-                            <span v-if="v.is_frequent" class="text-xs text-indigo-600">★</span>
-                            <span v-else class="text-xs text-slate-300">—</span>
+                            <span v-if="v.is_frequent" class="text-unicar-primary">★</span>
+                            <span v-else class="text-unicar-dim">—</span>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <span
                                 :class="[
-                                    'px-2 py-1 rounded-full text-xs font-medium',
-                                    v.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
+                                    'px-2 py-1 rounded-full text-xs font-medium ring-1',
+                                    v.is_active ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30' : 'bg-white/5 text-unicar-muted ring-unicar-border-strong',
                                 ]"
                             >
                                 {{ v.is_active ? 'Activo' : 'Inactivo' }}
@@ -78,14 +78,14 @@ function toggle(v) {
                         <td class="px-4 py-3 text-right">
                             <button
                                 @click="toggle(v)"
-                                :class="['text-xs font-medium', v.is_active ? 'text-red-600 hover:text-red-800' : 'text-emerald-600 hover:text-emerald-800']"
+                                :class="['text-xs font-medium', v.is_active ? 'text-red-400 hover:text-red-300' : 'text-emerald-400 hover:text-emerald-300']"
                             >
                                 {{ v.is_active ? 'Desactivar' : 'Reactivar' }}
                             </button>
                         </td>
                     </tr>
                     <tr v-if="vehicles.data.length === 0">
-                        <td colspan="8" class="px-4 py-8 text-center text-slate-400">No se encontraron vehículos.</td>
+                        <td colspan="8" class="px-4 py-10 text-center text-unicar-dim">No se encontraron vehículos.</td>
                     </tr>
                 </tbody>
             </table>

@@ -18,6 +18,7 @@ class TripController extends Controller
     public function index(Request $request)
     {
         $query = Trip::select('trips.*')
+                     ->with(['driver', 'vehicle']) // eager loading: evita N+1 en TripResource
                      ->join('users', 'trips.driver_id', '=', 'users.id');
 
         // Solo viajes activos y que aún no hayan salido
@@ -79,7 +80,8 @@ class TripController extends Controller
         $user = $request->user();
         
         // Obtenemos todos los viajes de este conductor ordenados por fecha
-        $trips = Trip::where('driver_id', $user->id)
+        $trips = Trip::with(['driver', 'vehicle']) // eager loading: evita N+1
+                     ->where('driver_id', $user->id)
                      ->orderBy('departure_time', 'desc')
                      ->get();
 
@@ -116,9 +118,8 @@ class TripController extends Controller
     // GET /api/v1/trips/{id}
     public function show($id)
     {
-        // findOrFail ya lanza ModelNotFoundException
-        $trip = Trip::findOrFail($id);
-        $trip = Trip::with(['driver', 'bookings.passenger'])->findOrFail($id);
+        // Eager loading de todas las relaciones que usa TripResource (evita N+1)
+        $trip = Trip::with(['driver', 'vehicle', 'bookings.passenger'])->findOrFail($id);
         return new TripResource($trip);
     }
 

@@ -22,7 +22,7 @@ class BookingController extends Controller
 
         // Obtenemos las reservas del usuario autenticado, incluyendo los datos del viaje y el conductor
         $bookings = Booking::where('passenger_id', $user->id)
-            ->with('trip.driver') 
+            ->with(['trip.driver', 'trip.vehicle']) // eager loading completo: evita N+1
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 

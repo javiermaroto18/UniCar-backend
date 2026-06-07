@@ -32,7 +32,11 @@ RUN apt-get update && apt-get install -y \
         gd \
         zip \
         exif \
+        opcache \
     && rm -rf /var/lib/apt/lists/*
+
+# Configuración de OPcache (acelera la ejecución de PHP)
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Activar mod_rewrite (necesario para las rutas de Laravel)
 RUN a2enmod rewrite

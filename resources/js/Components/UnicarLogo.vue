@@ -1,0 +1,36 @@
+<script setup>
+// Logo de UniCar replicado del navbar del frontend (icono directions_car + texto).
+// SVG inline para no cargar la fuente Material Symbols (mejor rendimiento).
+defineProps({
+    size: { type: String, default: 'md' }, // 'md' | 'lg'
+    showText: { type: Boolean, default: true },
+});
+</script>
+
+<template>
+    <div class="flex items-center gap-2.5">
+        <span
+            :class="[
+                'flex items-center justify-center rounded-lg bg-unicar-primary text-white shrink-0',
+                size === 'lg' ? 'h-12 w-12' : 'h-9 w-9',
+            ]"
+        >
+            <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                :class="size === 'lg' ? 'h-7 w-7' : 'h-5 w-5'"
+            >
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+            </svg>
+        </span>
+        <span
+            v-if="showText"
+            :class="[
+                'font-bold tracking-tight text-unicar-primary',
+                size === 'lg' ? 'text-2xl' : 'text-lg',
+            ]"
+        >
+            UniCar
+        </span>
+    </div>
+</template>

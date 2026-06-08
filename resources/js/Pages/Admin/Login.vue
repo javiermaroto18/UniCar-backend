@@ -1,5 +1,6 @@
 <script setup>
 import { useForm, Head } from '@inertiajs/vue3';
+import UnicarLogo from '../../Components/UnicarLogo.vue';
 
 const form = useForm({
     email: '',
@@ -20,8 +21,8 @@ function submit() {
     <div class="min-h-screen flex items-center justify-center bg-unicar-bg text-unicar-text px-4">
         <div class="w-full max-w-md">
             <div class="flex flex-col items-center mb-8">
-                <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-unicar-primary text-white text-xl font-bold mb-3">U</span>
-                <h1 class="text-2xl font-bold">UniCar</h1>
+                <UnicarLogo size="lg" :show-text="false" class="mb-3" />
+                <h1 class="text-2xl font-bold text-unicar-primary">UniCar</h1>
                 <p class="text-unicar-dim text-sm mt-1">Panel de administración</p>
             </div>
 

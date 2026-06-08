@@ -20,7 +20,7 @@ class UserController extends Controller
                   ->orWhere('email', 'like', "%{$search}%");
             })
             ->withCount(['trips', 'bookings', 'vehicles'])
-            ->orderBy('id')
+            ->orderByDesc('id') // los usuarios más recientes primero
             ->paginate(12)
             ->withQueryString()
             ->through(fn (User $u) => [

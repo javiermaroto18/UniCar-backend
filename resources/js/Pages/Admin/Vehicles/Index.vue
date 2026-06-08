@@ -7,6 +7,7 @@ import Pagination from '../../../Components/Pagination.vue';
 const props = defineProps({
     vehicles: { type: Object, required: true },
     filters: { type: Object, required: true },
+    summary: { type: Object, required: true },
 });
 
 const search = ref(props.filters.search || '');
@@ -33,6 +34,22 @@ function toggle(v) {
     <AdminLayout>
         <template #title>Gestión de vehículos</template>
 
+        <!-- Resumen -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="bg-unicar-surface rounded-xl border border-unicar-border p-4">
+                <p class="text-2xl font-bold">{{ summary.total }}</p>
+                <p class="text-xs text-unicar-muted uppercase tracking-wide mt-0.5">Total</p>
+            </div>
+            <div class="bg-unicar-surface rounded-xl border border-unicar-border p-4">
+                <p class="text-2xl font-bold text-emerald-400">{{ summary.active }}</p>
+                <p class="text-xs text-unicar-muted uppercase tracking-wide mt-0.5">Activos</p>
+            </div>
+            <div class="bg-unicar-surface rounded-xl border border-unicar-border p-4">
+                <p class="text-2xl font-bold text-unicar-dim">{{ summary.inactive }}</p>
+                <p class="text-xs text-unicar-muted uppercase tracking-wide mt-0.5">Inactivos</p>
+            </div>
+        </div>
+
         <input
             v-model="search"
             type="search"
@@ -44,27 +61,29 @@ function toggle(v) {
             <table class="w-full text-sm">
                 <thead class="bg-white/5 text-unicar-dim text-left text-xs uppercase tracking-wide">
                     <tr>
-                        <th class="px-4 py-3 font-medium">#</th>
+                        <th class="px-4 py-3 font-medium">Vehículo</th>
                         <th class="px-4 py-3 font-medium">Propietario</th>
-                        <th class="px-4 py-3 font-medium">Modelo</th>
                         <th class="px-4 py-3 font-medium">Matrícula</th>
                         <th class="px-4 py-3 font-medium text-center">Viajes</th>
-                        <th class="px-4 py-3 font-medium text-center">Frecuente</th>
                         <th class="px-4 py-3 font-medium text-center">Estado</th>
                         <th class="px-4 py-3 font-medium text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-unicar-border">
                     <tr v-for="v in vehicles.data" :key="v.id" class="hover:bg-white/5 transition">
-                        <td class="px-4 py-3 text-unicar-dim">{{ v.id }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-unicar-text">{{ v.brand_model }}</span>
+                                <span
+                                    v-if="v.is_frequent"
+                                    class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-unicar-primary/15 text-unicar-primary"
+                                    title="Vehículo frecuente del conductor"
+                                >★ Frecuente</span>
+                            </div>
+                        </td>
                         <td class="px-4 py-3 text-unicar-muted">{{ v.owner || '—' }}</td>
-                        <td class="px-4 py-3 font-medium text-unicar-text">{{ v.brand_model }}</td>
                         <td class="px-4 py-3 text-unicar-muted font-mono">{{ v.license_plate }}</td>
                         <td class="px-4 py-3 text-center text-unicar-muted">{{ v.trips_count }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <span v-if="v.is_frequent" class="text-unicar-primary">★</span>
-                            <span v-else class="text-unicar-dim">—</span>
-                        </td>
                         <td class="px-4 py-3 text-center">
                             <span
                                 :class="[
@@ -85,7 +104,7 @@ function toggle(v) {
                         </td>
                     </tr>
                     <tr v-if="vehicles.data.length === 0">
-                        <td colspan="8" class="px-4 py-10 text-center text-unicar-dim">No se encontraron vehículos.</td>
+                        <td colspan="6" class="px-4 py-10 text-center text-unicar-dim">No se encontraron vehículos.</td>
                     </tr>
                 </tbody>
             </table>

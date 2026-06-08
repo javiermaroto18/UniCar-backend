@@ -1,6 +1,7 @@
 <script setup>
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import UnicarLogo from '../Components/UnicarLogo.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -36,12 +37,9 @@ const initials = computed(() => {
     <div class="min-h-screen flex bg-unicar-bg text-unicar-text">
         <!-- Barra lateral -->
         <aside class="w-64 bg-unicar-surface border-r border-unicar-border flex flex-col">
-            <div class="px-6 py-5 flex items-center gap-2.5 border-b border-unicar-border">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-unicar-primary text-white font-bold">U</span>
-                <div>
-                    <h1 class="text-sm font-bold leading-tight">UniCar</h1>
-                    <p class="text-[11px] text-unicar-dim">Administración</p>
-                </div>
+            <div class="px-6 py-5 border-b border-unicar-border">
+                <UnicarLogo size="md" />
+                <p class="text-[11px] text-unicar-dim mt-1 ml-[2.9rem] -mt-0.5">Administración</p>
             </div>
 
             <nav class="flex-1 px-3 py-4 space-y-1">

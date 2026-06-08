@@ -21,6 +21,9 @@ class VehicleController extends Controller
                 $q->where('brand_model', 'like', "%{$search}%")
                   ->orWhere('license_plate', 'like', "%{$search}%");
             })
+            // Orden: activos primero, luego los frecuentes, luego los más recientes
+            ->orderByDesc('is_active')
+            ->orderByDesc('is_frequent')
             ->orderByDesc('id')
             ->paginate(12)
             ->withQueryString()
@@ -37,6 +40,11 @@ class VehicleController extends Controller
         return Inertia::render('Admin/Vehicles/Index', [
             'vehicles' => $vehicles,
             'filters' => ['search' => $search],
+            'summary' => [
+                'total' => Vehicle::count(),
+                'active' => Vehicle::where('is_active', true)->count(),
+                'inactive' => Vehicle::where('is_active', false)->count(),
+            ],
         ]);
     }
 

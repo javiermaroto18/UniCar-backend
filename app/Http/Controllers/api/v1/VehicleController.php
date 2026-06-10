@@ -16,6 +16,8 @@ class VehicleController extends Controller
     {
         $vehicles = Vehicle::where('user_id', $request->user()->id)
                            ->where('is_active', true)
+                           ->orderByDesc('is_frequent')
+                           ->orderBy('id')
                            ->get();
         return VehicleResource::collection($vehicles);
     }
